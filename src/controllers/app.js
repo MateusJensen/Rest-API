@@ -1,6 +1,6 @@
 const express = require('express');
-const pedidos = require('./routes/pedidos');
-const produtos = require('./routes/produtos');
+const pedidos = require('../routes/pedidos');
+const produtos = require('../routes/produtos');
 
 const app = express();
 
