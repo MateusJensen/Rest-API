@@ -1,10 +1,10 @@
 const express = require('express');
 const pedidos = require('../routes/pedidos');
 const produtos = require('../routes/produtos');
-
 const app = express();
 
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.use((req, res, next) => {
   res.header('Acess-Control-Allow-Origin', '*');

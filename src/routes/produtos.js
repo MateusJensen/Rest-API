@@ -1,6 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const tools = require('../functions/functions');
 const mysql = require('../database/mysql').pool;
+const multer = require('multer');
+const storage = multer.diskStorage({
+     destination: function(req, file, cb) {
+          cb(null, './uploads/');
+     },
+     filename: function (req, file, cb) {
+          cb(null, tools.time + file.originalname);
+     }
+});
+const upload = multer({
+     storage: storage,
+     limits: {
+          fileSize: 1024 * 1024 * 5
+     },
+     fileFilter: tools.fileFilter
+});
 
 
 router.get('/', (req, res, next) => {
@@ -28,22 +45,22 @@ router.get('/', (req, res, next) => {
                                    id_produto: prod.id_produto,
                                    nome: prod.nome,
                                    preco: prod.preco,
+                                   imagem: 'http://localhost:5000/' + prod.imagem_produto,
                                    request: {
                                         tipo: 'GET',
-                                        descricao: 'Retorna todos os produtos',
+                                        descricao: 'Retorna dados de um produto especifico',
                                         url: 'http://localhost:5000/produtos/' + prod.id_produto
                                    }
                               }
                          })
                     }
-
                     return res.status(200).send(response);
                }
           );
      });
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', upload.single('produto_imagem'),(req, res, next) => {
      mysql.getConnection((error, conn) => {
 
           if (error) {
@@ -52,8 +69,8 @@ router.post('/', (req, res, next) => {
                })
           }
 
-          conn.query('INSERT INTO produtos (nome, preco) VALUES (?, ?)',
-               [req.body.nome, req.body.preco],
+          conn.query('INSERT INTO produtos (nome, preco, imagem_produto) VALUES (?, ?, ?)',
+               [req.body.nome, req.body.preco, req.file.path],
                (error, resultado, field) => {
                     conn.release();
 
@@ -64,15 +81,14 @@ router.post('/', (req, res, next) => {
                     }
 
                     const response = {
-                         mensagem: resultado.id_produto,
                          produto: {
                               nome: req.body.nome,
                               preco: req.body.preco,
-                              id_produto: resultado.id_produto,
+                              imagem: 'http://localhost:5000/' + req.file.path,
                               request: {
-                                   tipo: 'POST',
-                                   descricao: 'Adiciona um produto',
-                                   url: 'http://localhost:5000/produtos/'
+                                   tipo: 'GET',
+                                   descricao: 'Retorna todos os produtos',
+                                   url: 'http://localhost:5000/produtos'
                               }
                          }
                     }
@@ -114,9 +130,10 @@ router.get('/:id_produto', (req, res, next) => {
                               nome: resultado[0].nome,
                               preco: resultado[0].preco,
                               id_produto: resultado[0].id_produto,
+                              imagem: `http://localhost:5000/${resultado[0].imagem_produto}`,
                               request: {
                                    tipo: 'GET',
-                                   descricao: 'Retorna um produto especifico',
+                                   descricao: 'Retorna todos os produtos',
                                    url: 'http://localhost:5000/produtos'
                               }
                          }
@@ -154,8 +171,8 @@ router.patch('/', (req, res, next) => {
                               preco: req.body.preco,
                               id_produto: req.body.id_produto,
                               request: {
-                                   tipo: "PATCH",
-                                   descricao: "Atualiza um produto",
+                                   tipo: "GET",
+                                   descricao: "Retorna todos os produtos",
                                    url: "http://localhost:5000/produtos"
                               }
                          }
@@ -200,8 +217,13 @@ router.delete('/', (req, res, next) => {
                               const response = {
                                    mensagem: "Produto excluido",
                                    request: {
-                                        tipo: "DELETE",
-                                        descricao: "Exclui um produto",
+                                        tipo: "POST",
+                                        descricao: "Adiciona um produto",
+                                        body: {
+                                             nome: "nome do produto",
+                                             preco: "preco do produto",
+                                             imagem: 'inserir arquivo de imagem | opcional'
+                                        },
                                         url: "http://localhost:5000/produtos"
                                    }
                               }
