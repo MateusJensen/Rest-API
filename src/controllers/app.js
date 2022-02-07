@@ -1,6 +1,7 @@
 const express = require('express');
 const pedidos = require('../routes/pedidos');
 const produtos = require('../routes/produtos');
+const usuarios = require('../routes/usuarios');
 const app = express();
 
 app.use(express.json());
@@ -17,6 +18,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/usuarios', usuarios);
 app.use('/pedidos', pedidos);
 app.use('/produtos', produtos);
 
